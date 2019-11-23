@@ -19,8 +19,8 @@ namespace MetricLogsParser
         private static List<Tuple<string, string>> UnclassifiedColloction = new List<Tuple<string, string>>();
         private static int _numberOfSuccess = 0;
         private static int _numberOfFailures = 0;
-        private static readonly string ResultsFilePath = @"C:\Users\yashmuel\Projects\MetricLogFiles\output\results.txt";
-        private static readonly string InputFolderPath = @"C:\Users\yashmuel\Projects\MetricLogFiles\input";
+        private static readonly string ResultsFilePath = @"C:\Users\yashmuel\Projects\MetricLogFiles\output\results4.txt";
+        private static readonly string InputFolderPath = @"C:\Users\yashmuel\Projects\MetricLogFiles\input1";
 
 
         static void Main(string[] args)
@@ -76,6 +76,10 @@ namespace MetricLogsParser
             results.Add("\n\nSubscriptionNotFound: ");
             results.AddRange(SubscriptionNotFoundCollection.Select(i => i.ToString()));
 
+            results.Add("\n\nRerun (Internal Server Error + Timeout): ");
+            InternalServerErrorCollection.AddRange(ArmTimeoutCollection);
+            results.AddRange(InternalServerErrorCollection.Select(i => i.Item1));
+
 
 
             System.IO.File.WriteAllLines(ResultsFilePath, results);
@@ -113,7 +117,7 @@ namespace MetricLogsParser
             {
                 return;
             }
-            for (int i = index +1; i <= index + numOfFailed; i++)
+            for (int i = index +1; i <= index + numOfFailed && i< lines.Length; i++)
             {
                 failedLines.Add(lines[i]);
             }
@@ -136,7 +140,7 @@ namespace MetricLogsParser
             ResourceGroupNotFoundCollection.AddRange(badRequests.Where(l => l.Item2.Contains("Resource group") && l.Item2.Contains("could not be found")));
             ArmTimeoutCollection.AddRange(badRequests.Where(l => l.Item2.Contains("Arm request client timeout")));
 
-            var internalServerErrors = realFailedLines.Where(l => l.Item2.Contains("InternalServerError"));
+            var internalServerErrors = realFailedLines.Where(l => l.Item2.Contains("InternalServerError") || l.Item2.Contains("Internal Server Error, error: The server encountered an internal error"));
             InternalServerErrorCollection.AddRange(internalServerErrors);
             UnclassifiedColloction.AddRange(realFailedLines.Where(l => !internalServerErrors.Contains(l) && !badRequests.Contains(l)));
         }
